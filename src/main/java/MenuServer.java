@@ -121,7 +121,7 @@ public class MenuServer {
             ByteBuffer send = ByteBuffer.allocate(token.length + 1);
             send.put((byte) MenuMessageType.SUCCESSFUL_CREATED_LOBBY.getCode());
 
-            lobbies.put(stringResult.toString(), new ArrayList<>());
+            lobbies.put(stringResult.toString(), new LinkedList<>());
             lobbies.get(stringResult.toString()).add(key);
 
             send.put(token);
