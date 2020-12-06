@@ -112,10 +112,13 @@ public class MenuServer {
         try {
             String passSymbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             Random rnd = new Random();
-            StringBuilder stringResult = new StringBuilder();
-            for (int i = 0; i < 6; i++) {
-                stringResult.append(passSymbols.charAt(rnd.nextInt(passSymbols.length())));
-            }
+            StringBuilder stringResult;
+            do {
+                stringResult = new StringBuilder();
+                for (int i = 0; i < 6; i++) {
+                    stringResult.append(passSymbols.charAt(rnd.nextInt(passSymbols.length())));
+                }
+            } while (lobbies.containsKey(stringResult.toString()));
 
             byte[] token = stringResult.toString().getBytes();
             ByteBuffer send = ByteBuffer.allocate(token.length + 1);
