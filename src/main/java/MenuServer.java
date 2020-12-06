@@ -82,13 +82,13 @@ public class MenuServer {
             createLobby(key);
         }
         if (messageType == MenuMessageType.DELETE_LOBBY.getCode()) {
-            deleteLobby(key, buffer, read);
+            deleteLobby(key, buffer.array(), read);
         }
         if (messageType == MenuMessageType.CONNECT_TO_LOBBY.getCode()) {
-            connectToLobby(key, buffer, read);
+            connectToLobby(key, buffer.array(), read);
         }
         if (messageType == MenuMessageType.DISCONNECT_FROM_LOBBY.getCode()) {
-            disconnectFromLobby(key, buffer, read);
+            disconnectFromLobby(key, buffer.array(), read);
         }
     }
 
@@ -131,11 +131,9 @@ public class MenuServer {
         }
     }
 
-    private void deleteLobby(SelectionKey key, ByteBuffer buffer, int read) throws IOException {
+    private void deleteLobby(SelectionKey key, byte[] buffer, int read) throws IOException {
         try {
-            byte[] tokenByte = new byte[12];
-            buffer.get(tokenByte, 0, read);
-            String token = new String(tokenByte).replaceAll("\t", "").trim();
+            String token = new String(buffer, 1, read - 1).replaceAll("\t", "").trim();
 
             if (lobbies.containsKey(token)) {
                 writeDataBroadcast(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.SUCCESSFUL_DELETE_LOBBY.getCode()).toByteArray()), lobbies.get(token));
@@ -148,11 +146,9 @@ public class MenuServer {
         }
     }
 
-    private void connectToLobby(SelectionKey key, ByteBuffer buffer, int read) throws IOException {
+    private void connectToLobby(SelectionKey key, byte[] buffer, int read) throws IOException {
         try {
-            byte[] tokenChars = new byte[12];
-            buffer.get(tokenChars, 0, read);
-            String token = new String(tokenChars).replaceAll("\t", "").trim();
+            String token = new String(buffer, 1, read - 1).replaceAll("\t", "").trim();
 
             if (lobbies.containsKey(token) && lobbies.get(token).size() < 4) {
                 lobbies.get(token).add(key);
@@ -171,11 +167,9 @@ public class MenuServer {
         }
     }
 
-    private void disconnectFromLobby(SelectionKey key, ByteBuffer buffer, int read) throws IOException {
+    private void disconnectFromLobby(SelectionKey key, byte[] buffer, int read) throws IOException {
         try {
-            byte[] playerToken = new byte[12];
-            buffer.get(playerToken, 0, read);
-            String token = new String(playerToken).replaceAll("\t", "").trim();
+            String token = new String(buffer, 1, read - 1).replaceAll("\t", "").trim();
 
             boolean success = lobbies.get(token).remove(key);
             if (success) {
