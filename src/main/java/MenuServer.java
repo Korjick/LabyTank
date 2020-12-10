@@ -10,9 +10,9 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
-public class MenuServer {
+public class MenuServer implements Runnable {
 
-    private static MenuServer menuServer;
+    public static MenuServer menuServer;
     private Selector selector;
     private ServerSocketChannel serverSocketChannel;
 
@@ -24,7 +24,6 @@ public class MenuServer {
     public static void init() throws Exception {
         if (menuServer != null) throw new Exception("Сервер уже был создан");
         menuServer = new MenuServer();
-        menuServer.start();
     }
 
     private MenuServer() throws Exception {
@@ -36,7 +35,7 @@ public class MenuServer {
 
         serverSocketChannel.bind(new InetSocketAddress(
                 properties.getProperty("host"),
-                Integer.parseInt(properties.getProperty("port"))));
+                Integer.parseInt(properties.getProperty("menuPort"))));
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.register(selector, serverSocketChannel.validOps());
 
@@ -45,23 +44,28 @@ public class MenuServer {
         lobbies = new HashMap<>();
     }
 
-    private void start() throws Exception {
+    @Override
+    public void run() {
         while (true) {
-            selector.select();
-            Set<SelectionKey> selectedKeys = selector.selectedKeys();
-            Iterator<SelectionKey> iter = selectedKeys.iterator();
-            while (iter.hasNext()) {
-                SelectionKey key = iter.next();
+            try {
+                selector.select();
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> iter = selectedKeys.iterator();
+                while (iter.hasNext()) {
+                    SelectionKey key = iter.next();
 
-                if (key.isAcceptable()) {
-                    registerPlayer(selector, serverSocketChannel);
+                    if (key.isAcceptable()) {
+                        registerPlayer(selector, serverSocketChannel);
+                    }
+
+                    if (key.isWritable()) {
+                        readData(buffer, key);
+                    }
+
+                    iter.remove();
                 }
-
-                if (key.isWritable()) {
-                    readData(buffer, key);
-                }
-
-                iter.remove();
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
             }
         }
     }
@@ -89,6 +93,9 @@ public class MenuServer {
         }
         if (messageType == MenuMessageType.DISCONNECT_FROM_LOBBY.getCode()) {
             disconnectFromLobby(key, buffer.array(), read);
+        }
+        if (messageType == MenuMessageType.START_GAME.getCode()) {
+            startGame(key, buffer.array(), read);
         }
     }
 
@@ -172,18 +179,17 @@ public class MenuServer {
 
     private void disconnectFromLobby(SelectionKey key, byte[] buffer, int read) throws IOException {
         try {
-            String token = new String(buffer, 1, read - 1).replaceAll("\t", "").trim();
+            String token = new String(buffer, 2, read - 2).replaceAll("\t", "").trim();
 
             boolean success = lobbies.get(token).remove(key);
             if (success) {
                 ByteBuffer disconnect = ByteBuffer.allocate(2);
                 disconnect.put((byte) MenuMessageType.SUCCESSFUL_DISCONNECTED_FROM_LOBBY.getCode());
-                disconnect.put((byte) 1);
+                disconnect.put(buffer[1]);
 
-                writeData(disconnect, key);
-                writeDataBroadcast(ByteBuffer.wrap(
-                        BigInteger.valueOf(MenuMessageType.SUCCESSFUL_DISCONNECTED_FROM_LOBBY.getCode()).toByteArray()),
-                        lobbies.get(token));
+                writeData(ByteBuffer.wrap(
+                        BigInteger.valueOf(MenuMessageType.SUCCESSFUL_DISCONNECTED_FROM_LOBBY.getCode()).toByteArray()), key);
+                writeDataBroadcast(disconnect, lobbies.get(token));
             } else {
                 writeData(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.DISCONNECTED_FROM_LOBBY_ERROR.getCode()).toByteArray()), key);
             }
@@ -192,12 +198,27 @@ public class MenuServer {
         }
     }
 
-    public static void main(String[] args) {
-        try {
-            MenuServer.init();
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void startGame(SelectionKey key, byte[] buffer, int read) throws IOException {
+        String token = new String(buffer, 1, read - 1).replaceAll("\t", "").trim();
+
+        if (lobbies.containsKey(token)) {
+            int i = 0;
+            for (SelectionKey k : lobbies.get(token)) {
+                ByteBuffer id = ByteBuffer.allocate(2);
+                id.put(BigInteger.valueOf(MenuMessageType.GET_ID.getCode()).toByteArray());
+                id.put((byte) i);
+                writeData(id, k);
+                i++;
+            }
+
+            writeDataBroadcast(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.SUCCESSFUL_START_GAME.getCode()).toByteArray()), lobbies.get(token));
+        } else {
+            writeData(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.START_GAME_ERROR.getCode()).toByteArray()), key);
         }
+    }
+
+    public Map<String, List<SelectionKey>> getLobbies() {
+        return lobbies;
     }
 }
 
