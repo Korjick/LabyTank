@@ -10,7 +10,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
-public class MenuServer implements Runnable {
+public class MenuServer {
 
     public static MenuServer menuServer;
     private Selector selector;
@@ -44,8 +44,7 @@ public class MenuServer implements Runnable {
         lobbies = new HashMap<>();
     }
 
-    @Override
-    public void run() {
+    public void start() {
         while (true) {
             try {
                 selector.select();
@@ -85,27 +84,28 @@ public class MenuServer implements Runnable {
         if (messageType == MenuMessageType.CREATE_LOBBY.getCode()) {
             createLobby(key);
         }
-        if (messageType == MenuMessageType.DELETE_LOBBY.getCode()) {
+        else if (messageType == MenuMessageType.DELETE_LOBBY.getCode()) {
             deleteLobby(key, buffer.array(), read);
         }
-        if (messageType == MenuMessageType.CONNECT_TO_LOBBY.getCode()) {
+        else if (messageType == MenuMessageType.CONNECT_TO_LOBBY.getCode()) {
             connectToLobby(key, buffer.array(), read);
         }
-        if (messageType == MenuMessageType.DISCONNECT_FROM_LOBBY.getCode()) {
+        else if (messageType == MenuMessageType.DISCONNECT_FROM_LOBBY.getCode()) {
             disconnectFromLobby(key, buffer.array(), read);
         }
-        if (messageType == MenuMessageType.START_GAME.getCode()) {
+        else if (messageType == MenuMessageType.START_GAME.getCode()) {
             startGame(key, buffer.array(), read);
         }
+        else GameServer.gameServer.check(messageType, key, buffer.array(), read);
     }
 
-    private void writeData(ByteBuffer buffer, SelectionKey key) throws IOException {
+    public void writeData(ByteBuffer buffer, SelectionKey key) throws IOException {
         SocketChannel client = (SocketChannel) key.channel();
         buffer.clear();
         client.write(buffer);
     }
 
-    private void writeDataBroadcast(ByteBuffer buffer, List<SelectionKey> keys) throws IOException {
+    public void writeDataBroadcast(ByteBuffer buffer, List<SelectionKey> keys) throws IOException {
         for (SelectionKey key : keys) writeData(buffer, key);
     }
 

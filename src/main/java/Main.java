@@ -4,11 +4,7 @@ public class Main {
             MenuServer.init();
             GameServer.init();
 
-            Thread menuServer = new Thread(MenuServer.menuServer);
-            menuServer.start();
-
-            Thread gameServer = new Thread(GameServer.gameServer);
-            gameServer.start();
+            MenuServer.menuServer.start();
         } catch (Exception e) {
             e.printStackTrace();
         }

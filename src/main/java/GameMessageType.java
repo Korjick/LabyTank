@@ -1,7 +1,6 @@
 public enum  GameMessageType {
 
-    INIT(0),
-    TANK_POSITION(1);
+    TANK_POSITION(16);
 
     private int code;
 
