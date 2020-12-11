@@ -10,7 +10,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
-public class MenuServer {
+public class MenuServer implements Runnable{
 
     public static MenuServer menuServer;
     private Selector selector;
@@ -44,7 +44,8 @@ public class MenuServer {
         lobbies = new HashMap<>();
     }
 
-    public void start() {
+    @Override
+    public void run() {
         while (true) {
             try {
                 selector.select();
@@ -96,16 +97,15 @@ public class MenuServer {
         else if (messageType == MenuMessageType.START_GAME.getCode()) {
             startGame(key, buffer.array(), read);
         }
-        else GameServer.gameServer.check(messageType, key, buffer.array(), read);
     }
 
-    public void writeData(ByteBuffer buffer, SelectionKey key) throws IOException {
+    private void writeData(ByteBuffer buffer, SelectionKey key) throws IOException {
         SocketChannel client = (SocketChannel) key.channel();
         buffer.clear();
         client.write(buffer);
     }
 
-    public void writeDataBroadcast(ByteBuffer buffer, List<SelectionKey> keys) throws IOException {
+    private void writeDataBroadcast(ByteBuffer buffer, List<SelectionKey> keys) throws IOException {
         for (SelectionKey key : keys) writeData(buffer, key);
     }
 
@@ -215,10 +215,6 @@ public class MenuServer {
         } else {
             writeData(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.START_GAME_ERROR.getCode()).toByteArray()), key);
         }
-    }
-
-    public Map<String, List<SelectionKey>> getLobbies() {
-        return lobbies;
     }
 }
 
