@@ -1,3 +1,8 @@
+package Servers;
+
+import Enums.MenuMessageType;
+import Maze.MazeGenerator;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -200,13 +205,20 @@ public class MenuServer implements Runnable{
 
     private void startGame(SelectionKey key, byte[] buffer, int read) throws IOException {
         String token = new String(buffer, 1, read - 1).replaceAll("\t", "").trim();
+        MazeGenerator mazeGenerator = new MazeGenerator(10, 8);
+        byte[][] maze = mazeGenerator.generateMaze();
 
         if (lobbies.containsKey(token)) {
             int i = 0;
             for (SelectionKey k : lobbies.get(token)) {
-                ByteBuffer id = ByteBuffer.allocate(2);
+                ByteBuffer id = ByteBuffer.allocate(82);
                 id.put(BigInteger.valueOf(MenuMessageType.GET_ID.getCode()).toByteArray());
                 id.put((byte) i);
+                for (byte[] bytes : maze) {
+                    for (byte aByte : bytes) {
+                        id.put(aByte);
+                    }
+                }
                 writeData(id, k);
                 i++;
             }

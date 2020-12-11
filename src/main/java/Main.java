@@ -1,3 +1,6 @@
+import Servers.GameServer;
+import Servers.MenuServer;
+
 public class Main {
     public static void main(String[] args) {
         try {

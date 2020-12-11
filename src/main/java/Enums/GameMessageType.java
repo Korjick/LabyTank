@@ -1,3 +1,5 @@
+package Enums;
+
 public enum  GameMessageType {
 
     INIT(0),

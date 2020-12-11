@@ -1,3 +1,5 @@
+package Enums;
+
 import org.omg.PortableInterceptor.SUCCESSFUL;
 
 public enum MenuMessageType {
