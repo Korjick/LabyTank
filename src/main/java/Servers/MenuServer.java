@@ -223,6 +223,7 @@ public class MenuServer implements Runnable{
                 i++;
             }
 
+            GameServer.gameServer.getLobbies().put(token, new LinkedList<>());
             writeDataBroadcast(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.SUCCESSFUL_START_GAME.getCode()).toByteArray()), lobbies.get(token));
         } else {
             writeData(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.START_GAME_ERROR.getCode()).toByteArray()), key);

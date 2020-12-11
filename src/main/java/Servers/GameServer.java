@@ -19,7 +19,7 @@ public class GameServer implements Runnable {
     private final ByteBuffer buffer;
     private final Properties properties;
 
-    private List<SocketAddress> addresses;
+    private Map<String, List<SocketAddress>> lobbies;
 
     public static void init() throws Exception {
         if (gameServer != null) throw new Exception("Сервер уже был создан");
@@ -38,7 +38,7 @@ public class GameServer implements Runnable {
         serverDatagramChannel.configureBlocking(false);
 
         buffer = ByteBuffer.allocate(Integer.parseInt(properties.getProperty("bufferSize")));
-        addresses = new ArrayList<>();
+        lobbies = new HashMap<>();
         System.out.println("Game server started...");
     }
 
@@ -56,11 +56,14 @@ public class GameServer implements Runnable {
                     if (data.length <= 0) continue;
 
                     if (data[0] == GameMessageType.INIT.getCode()) {
-                        addresses.add(socketAddress);
+                        String token = new String(data, 1, data.length - 1).replaceAll("\t", "").trim();
+                        if (lobbies.containsKey(token)) lobbies.get(token).add(socketAddress);
                     }
-                    if (data[0] == GameMessageType.TANK_POSITION.getCode() && data.length >= 22) {
-                        for (SocketAddress address : addresses)
-                            writeData(ByteBuffer.wrap(data), address);
+                    if (data[0] == GameMessageType.TANK_POSITION.getCode() && data.length >= 44) {
+                        String token = new String(data, 38, data.length - 38).replaceAll("\t", "").trim();
+                        if (lobbies.containsKey(token))
+                            for (SocketAddress address : lobbies.get(token))
+                                writeData(ByteBuffer.wrap(data), address);
                     }
                 }
             } catch (IOException e) {
@@ -71,6 +74,10 @@ public class GameServer implements Runnable {
 
     private void writeData(ByteBuffer buffer, SocketAddress socketAddress) throws IOException {
         serverDatagramChannel.send(buffer, socketAddress);
+    }
+
+    public Map<String, List<SocketAddress>> getLobbies() {
+        return lobbies;
     }
 }
 
