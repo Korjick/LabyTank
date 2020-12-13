@@ -44,7 +44,7 @@ public class MazeGenerator {
         MazeGeneratorCell curCell = maze[0][0];
         curCell.setVisited(true);
 
-        Stack<MazeGeneratorCell> stack = new Stack<MazeGeneratorCell>();
+        Stack<MazeGeneratorCell> stack = new Stack<>();
         do {
             ArrayList<MazeGeneratorCell> unvisitedNeightboors = new ArrayList<>();
 
