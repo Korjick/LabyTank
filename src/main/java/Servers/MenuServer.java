@@ -153,6 +153,7 @@ public class MenuServer implements Runnable{
             if (lobbies.containsKey(token)) {
                 writeDataBroadcast(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.SUCCESSFUL_DELETE_LOBBY.getCode()).toByteArray()), lobbies.get(token));
                 lobbies.remove(token);
+                GameServer.gameServer.getLobbies().remove(token);
             } else {
                 writeData(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.DELETE_LOBBY_ERROR.getCode()).toByteArray()), key);
             }
