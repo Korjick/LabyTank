@@ -91,9 +91,13 @@ public class GameServer implements Runnable {
                     }
                     if (data[0] == GameMessageType.GAME_OVER.getCode() && data.length >= 8) {
                         String token = new String(data, 2, data.length - 2).replaceAll("\t", "").trim().substring(0, 6);
-                        if (lobbies.containsKey(token))
-                            for (SocketAddress address : lobbies.get(token))
+                        if (lobbies.containsKey(token)){
+                            for (SocketAddress address : lobbies.get(token)) {
                                 writeData(ByteBuffer.wrap(data), address, 8);
+                            }
+                            lobbies.remove(token);
+                            MenuServer.menuServer.getLobbies().remove(token);
+                        }
                     }
                 }
             } catch (IOException e) {

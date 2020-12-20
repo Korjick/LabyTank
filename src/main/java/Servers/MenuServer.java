@@ -230,5 +230,9 @@ public class MenuServer implements Runnable{
             writeData(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.START_GAME_ERROR.getCode()).toByteArray()), key);
         }
     }
+
+    public Map<String, List<SelectionKey>> getLobbies() {
+        return lobbies;
+    }
 }
 
