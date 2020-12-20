@@ -1,6 +1,8 @@
 package Servers;
 
 import Enums.MenuMessageType;
+import Fxml.ListOfStatusLobbies;
+import Fxml.Lobby;
 import Maze.MazeGenerator;
 
 import java.io.File;
@@ -23,6 +25,9 @@ public class MenuServer implements Runnable{
 
     private ByteBuffer buffer;
     private Properties properties;
+
+    private static Lobby lobby;
+    private static byte[][] maze;
 
     private Map<String, List<SelectionKey>> lobbies;
 
@@ -141,6 +146,10 @@ public class MenuServer implements Runnable{
 
             send.put(token);
             writeData(send, key);
+
+            lobby = new Lobby(stringResult.toString());
+            ListOfStatusLobbies.changeLobby(true);
+
         } catch (Exception e) {
             writeData(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.CREATE_LOBBY_ERROR.getCode()).toByteArray()), key);
         }
@@ -175,6 +184,8 @@ public class MenuServer implements Runnable{
                 success.put(token.getBytes());
 
                 writeDataBroadcast(success, lobbies.get(token));
+                lobby.setCurrentCount();
+                ListOfStatusLobbies.addPlayer(true, token);
             } else {
                 writeData(ByteBuffer.wrap(BigInteger.valueOf(MenuMessageType.CONNECT_TO_LOBBY_ERROR.getCode()).toByteArray()), key);
             }
@@ -207,7 +218,7 @@ public class MenuServer implements Runnable{
     private void startGame(SelectionKey key, byte[] buffer, int read) throws IOException {
         String token = new String(buffer, 1, read - 1).replaceAll("\t", "").trim();
         MazeGenerator mazeGenerator = new MazeGenerator(10, 8);
-        byte[][] maze = mazeGenerator.generateMaze();
+        maze = mazeGenerator.generateMaze();
 
         if (lobbies.containsKey(token)) {
             int i = 0;
@@ -233,6 +244,14 @@ public class MenuServer implements Runnable{
 
     public Map<String, List<SelectionKey>> getLobbies() {
         return lobbies;
+    }
+
+    public static Lobby getLobby() {
+        return lobby;
+    }
+
+    public static byte[][] getMaze() {
+        return maze;
     }
 }
 
