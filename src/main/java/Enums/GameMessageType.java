@@ -8,7 +8,8 @@ public enum  GameMessageType {
     AMMO_POSITION(3),
     AMMO_DESTROY(4),
     TANK_DESTROY(5),
-    GAME_OVER(6);
+    GAME_OVER(6),
+    STRING_POSITION(7);
 
     private int code;
 

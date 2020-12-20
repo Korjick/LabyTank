@@ -65,6 +65,15 @@ public class GameServer implements Runnable {
                             for (SocketAddress address : lobbies.get(token))
                                 writeData(ByteBuffer.wrap(data), address, 44);
                     }
+                    if (data[0] == GameMessageType.STRING_POSITION.getCode() && data.length >= 10) {
+                        String info = new String(data, 0, data.length).replaceAll("\t", "").trim();
+                        String[] splited = info.split(";");
+
+                        int id = Integer.parseInt(splited[0]);
+                        int x = Integer.parseInt(splited[1]);
+                        int y = Integer.parseInt(splited[2]);
+                        String token = splited[3].substring(0, 6);
+                    }
                     if (data[0] == GameMessageType.AMMO_INIT.getCode() && data.length >= 21) {
                         String token = new String(data, 15, data.length - 15).replaceAll("\t", "").trim().substring(0, 6);
                         if (lobbies.containsKey(token))
