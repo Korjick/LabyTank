@@ -1,3 +1,4 @@
+import Fxml.ListOfStatusLobbies;
 import Servers.GameServer;
 import Servers.MenuServer;
 
@@ -12,6 +13,7 @@ public class Main {
 
             Thread gameServer = new Thread(GameServer.gameServer);
             gameServer.start();
+            ListOfStatusLobbies.main(null);
         } catch (Exception e) {
             e.printStackTrace();
         }
